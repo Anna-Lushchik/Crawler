@@ -11,15 +11,17 @@ class Crawler():
 
     def crawler(self, working_links, not_working_links, url, full_url, to_be_scraped, scraped, log, driver):
         parser = Parser.Parser(url)
+        printed_links = set()
         while to_be_scraped:
             site = to_be_scraped.pop(0)
             parser.pars(driver)
-            links = Crawler.scraper(site, full_url, log, scraped, driver)
+            links = Crawler.scraper(site, full_url, log, scraped, printed_links, driver)
             for link in links:
                 if Crawler.get_status_code(driver, link)//100 == 2 or Crawler.get_status_code(driver, link)//100 == 3:
                     working_links = working_links + 1
                     if not link[0:(len(url))] == url:
                         print(link)
+                        printed_links.add(link)
                         to_be_scraped.append(link)
                         continue
                     elif link in scraped:
@@ -37,12 +39,12 @@ class Crawler():
                 to_be_scraped.remove(scraped)
         return working_links, not_working_links
 
-    def scraper(site, full_url, log, scraped, driver):
+    def scraper(site, full_url, log, scraped, printed_links, driver):
         links = Crawler.get_links(site, full_url, log, driver)
         scraped.append(site)
         log.write('Done scraping %s\n\n' % (site))
         log.flush()
-        return links
+        return links.difference(printed_links)
 
     def get_links(site, full_url, log, driver):
         print("\n Testing %s\n" % (site))
