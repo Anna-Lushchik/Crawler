@@ -2,6 +2,7 @@ __author__ = 'Anna_Lushchik'
 
 from selenium.common.exceptions import StaleElementReferenceException
 import requests
+import time
 import Parser
 
 class Crawler():
@@ -9,6 +10,16 @@ class Crawler():
     def __init__(self, new_url):
         self.url = new_url
 
+    def timer(f):
+        def tmp(*args, **kwargs):
+            t = float(time.time())
+            res = f(*args, **kwargs)
+            real_time = float(time.time()-t)
+            print("Time: %f" % float(real_time/60), "minutes")
+            return res
+        return tmp
+
+    @timer
     def crawler(self, working_links, not_working_links, url, full_url, to_be_scraped, scraped, log, driver):
         parser = Parser.Parser(url)
         printed_links = set()
