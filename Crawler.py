@@ -21,13 +21,12 @@ class Crawler():
         return tmp
 
     @timer
-    def crawler(self, working_links, not_working_links, url, to_be_scraped, scraped, log):
-
+    def crawler(self, working_links, not_working_links, url, full_url, to_be_scraped, scraped, log):
+        parser = Parser.Parser()
         printed_links = set()
         while to_be_scraped:
             site = to_be_scraped.pop(0)
-
-            links = Crawler.scraper(site, url, log, scraped, printed_links)
+            links = Crawler.scraper(site, url, full_url, log, scraped, printed_links, parser)
             for link in links:
                 if Crawler.get_status_code(link)//100 == 2 or Crawler.get_status_code(link)//100 == 3:
                     working_links = working_links + 1
@@ -45,6 +44,9 @@ class Crawler():
                     else:
                         print("adding %s to the queue" % (link))
                         to_be_scraped.append(link)
+                elif Crawler.get_status_code(link) == 0:
+                    print(link, "Unable to open the page")
+                    not_working_links = not_working_links + 1
                 else:
                     print(link, "status code - ", Crawler.get_status_code(link))
                     not_working_links = not_working_links + 1
@@ -52,16 +54,16 @@ class Crawler():
                 to_be_scraped.remove(scraped)
         return working_links, not_working_links
 
-    def scraper(site, url, log, scraped, printed_links):
-        links = Crawler.get_links(site, url, log)
+    def scraper(site, url, full_url, log, scraped, printed_links, parser):
+        links = Crawler.get_links(site, url, full_url, log, parser)
         scraped.append(site)
         log.write('Done scraping %s\n\n' % (site))
         log.flush()
         return links.difference(printed_links)
 
-    def get_links(site, url, log):
+    def get_links(site, url, full_url, log, parser):
+        site = site [0:7] + site [11:]
         print("\n Testing %s\n" % (site))
-        parser = Parser.Parser(site)
         parser.pars(site)
         links = set()
         page = urllib.request.urlopen(site)
@@ -70,20 +72,22 @@ class Crawler():
         elements = re.findall('.*?href="(.*?)"',str(html))
         for link in elements:
             try:
-                if "http" not in link:
-                    if "phoenix" in link or "javascript" in link:
-                        link = url + "/" + link
-                        links.add(link)
-                    else:
-                        link = url + link
-                        links.add(link)
+                if "http" not in link and ".css" not in link and ".ico" not in link \
+                        and ".png" not in link and "mailto:" not in link and "phoenix" not in link \
+                        and "javascript" not in link and "Tearsheet" not in link:
+                    link = full_url + link
+                    links.add(link)
             except StaleElementReferenceException:
                 log.write("Stale element reference found!\n")
                 log.flush()
         return links
 
     def get_status_code(link):
-        conn = urllib.request.urlopen(link)
-        result = conn.getcode()
-        conn.close()
+        result = 0
+        try:
+            conn = urllib.request.urlopen(link)
+            result = conn.getcode()
+            conn.close()
+        except Exception:
+            pass
         return result

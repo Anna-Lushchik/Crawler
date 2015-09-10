@@ -3,6 +3,7 @@ __author__ = 'Anna_Lushchik'
 import Crawler
 
 url = 'http://epam.com'
+full_url = 'http://www.epam.com'
 
 to_be_scraped = []
 scraped = []
@@ -13,8 +14,8 @@ log = open('Crawler_log.txt', 'w')
 
 crawler = Crawler.Crawler(url)
 
-to_be_scraped.append(url)
-working_links, not_working_links = crawler.crawler(working_links, not_working_links, url, to_be_scraped, scraped, log)
+to_be_scraped.append(full_url)
+working_links, not_working_links = crawler.crawler(working_links, not_working_links, url, full_url, to_be_scraped, scraped, log)
 
 log.write('Working links -  %s\n' % (working_links))
 log.write('Not working links - %s\n' % (not_working_links))

@@ -6,17 +6,12 @@ import re
 
 class Parser():
 
-    def __init__(self, new_url):
-        self.url = new_url
+    def __init__(self):
+        print("__init__ Parser")
 
     def pars(self, site):
-        values = {'s':'basics', 'submit':'search'}
-        data = urllib.parse.urlencode(values)
-        data = data.encode('utf-8')
-        req = urllib.request.Request(site,data)
-        resp = urllib.request.urlopen(req)
-        respData = resp.read()
-
+        page = urllib.request.urlopen(site)
+        respData = page.read()
         paragraphs = re.findall(r'<p>(.*?)</p>',str(respData))
 
         with open("Parser_log.txt", "a") as text_file:
@@ -30,4 +25,4 @@ class Parser():
                 text_file.flush()
 
         text_file.close()
-        print("\n HTML parsing was produced successfully")
+        print("HTML parsing was produced successfully \n")
